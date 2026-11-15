@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sources of Energy — Virtual Physics Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    input[type="range"] {
+      accent-color: #2563eb;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-30 flex min-h-[60px] flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-2">
+    <div class="flex items-center gap-3">
+      <div class="flex h-11 w-12 items-center justify-center rounded-xl bg-emerald-50 text-2xl">
+        ⚡
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-slate-900">Sources of Energy Lab</h1>
+        <p class="text-sm text-slate-500">
+          Class 10 NCERT Physics — Renewable vs. Non-Renewable Energy &amp; Power Generation
+        </p>
+      </div>
+    </div>
+
+    <!-- MODE SWITCHER -->
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="flex rounded-lg border border-slate-200 bg-slate-100 p-1">
+        <button
+          id="btnTabPlant"
+          onclick="switchTab('plant')"
+          class="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition"
+        >
+          1. Power Plant Simulator
+        </button>
+        <button
+          id="btnTabGrid"
+          onclick="switchTab('grid')"
+          class="rounded-md px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition"
+        >
+          2. Renewable vs. Non-Renewable Grid
+        </button>
+      </div>
+
+      <button
+        onclick="resetLab()"
+        class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+      >
+        ↺ Reset
+      </button>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- TAB 1: INTERACTIVE POWER PLANT & ENERGY TRANSFORMATION LAB            -->
+  <!-- ===================================================================== -->
+  <div id="tabPlant">
+    <section class="border-b border-slate-200 bg-white">
+      <div class="flex flex-wrap items-center justify-between gap-3 px-5 pt-4">
+        <div>
+          <h2 id="plantTitle" class="font-bold text-emerald-700">
+            Solar Photovoltaic (PV) Power Plant — Renewable
+          </h2>
+          <p id="plantSubtitle" class="text-xs text-slate-500">
+            Direct conversion of solar radiation into DC/AC electricity via semiconductor cells
+          </p>
+        </div>
+
+        <!-- SOURCE SELECTOR PILLS -->
+        <div class="flex flex-wrap gap-1.5">
+          <button onclick="selectSource('solar')" id="pill-solar" class="source-pill rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">
+            ☀️ Solar (Renewable)
+          </button>
+          <button onclick="selectSource('wind')" id="pill-wind" class="source-pill rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">
+            🌬️ Wind (Renewable)
+          </button>
+          <button onclick="selectSource('hydro')" id="pill-hydro" class="source-pill rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">
+            💧 Hydroelectric (Renewable)
+          </button>
+          <button onclick="selectSource('coal')" id="pill-coal" class="source-pill rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">
+            🏭 Thermal Coal (Non-Renewable)
+          </button>
+          <button onclick="selectSource('nuclear')" id="pill-nuclear" class="source-pill rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">
+            ☢️ Nuclear Fission (Non-Renewable)
+          </button>
+        </div>
+      </div>
+
+      <!-- ANIMATED PLANT CANVAS -->
+      <div class="relative overflow-x-auto px-2 py-2">
+        <canvas
+          id="plantCanvas"
+          width="1100"
+          height="390"
+          class="mx-auto block w-full max-w-[1100px] rounded-lg border border-slate-100 bg-slate-50/50"
+        ></canvas>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <main class="grid grid-cols-1 gap-4 p-4 lg:grid-cols-3">
+      <!-- PARAMETERS -->
+      <section class="rounded-xl border border-slate-200 bg-white p-4">
+        <h2 class="mb-4 border-b border-slate-100 pb-3 text-lg font-bold">
+          🎚 Operating Parameters
+        </h2>
+
+        <!-- Input Intensity Slider -->
+        <div class="mb-5">
+          <div class="mb-2 flex items-center justify-between">
+            <label id="lblInputParam" class="text-sm font-semibold">Solar Irradiance (Sunlight)</label>
+            <span id="valInputParam" class="rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">
+              80% (800 W/m²)
+            </span>
+          </div>
+          <input id="sliderInputParam" type="range" min="0" max="100" step="5" value="80" class="w-full" />
+          <div class="mt-1 flex justify-between text-xs text-slate-400">
+            <span>0% (Off)</span>
+            <span>100% (Peak)</span>
+          </div>
+        </div>
+
+        <!-- Plant Scale / Capacity Slider -->
+        <div class="mb-5">
+          <div class="mb-2 flex items-center justify-between">
+            <label class="text-sm font-semibold">Installed Plant Capacity</label>
+            <span id="valCapacity" class="rounded-md bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">
+              500 MW
+            </span>
+          </div>
+          <input id="sliderCapacity" type="range" min="100" max="1000" step="50" value="500" class="w-full" />
+          <div class="mt-1 flex justify-between text-xs text-slate-400">
+            <span>100 MW</span>
+            <span>1000 MW</span>
+          </div>
+        </div>
+
+        <!-- Classification Badge -->
+        <div id="classificationBox" class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs leading-5 text-emerald-900">
+          <strong>Category: Renewable Source</strong><br />
+          Replenished naturally in a short time scale. Zero direct greenhouse gas emissions during electricity generation.
+        </div>
+      </section>
+
+      <!-- LIVE METRICS -->
+      <section class="rounded-xl border border-slate-200 bg-white p-4">
+        <h2 class="mb-4 border-b border-slate-100 pb-3 text-lg font-bold">
+          ✨ Input Power vs. Electrical Output
+        </h2>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-3">
+            <p id="cardInputTitle" class="text-[10px] font-bold tracking-wide text-amber-800">RAW SOLAR INPUT</p>
+            <p id="cardPowerIn" class="mt-2 text-2xl font-bold text-amber-600">2,000</p>
+            <p class="text-xs font-semibold text-slate-600">MegaWatts (MW)</p>
+            <p id="cardInputSub" class="mt-2 text-[10px] text-slate-500">Incident on PV panels</p>
+          </div>
+
+          <div class="rounded-xl border border-blue-200 bg-blue-50/50 p-3">
+            <p class="text-[10px] font-bold tracking-wide text-blue-800">ELECTRICAL OUTPUT</p>
+            <p id="cardPowerOut" class="mt-2 text-2xl font-bold text-blue-600">400</p>
+            <p class="text-xs font-semibold text-slate-600">MegaWatts (MW)</p>
+            <p class="mt-2 text-[10px] text-slate-500">After Inverter / Grid sync</p>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p class="text-[10px] font-bold tracking-wide text-slate-500">CONVERSION EFFICIENCY</p>
+            <p id="cardEfficiency" class="mt-2 text-2xl font-bold text-emerald-600">20%</p>
+            <p class="text-xs font-semibold text-slate-600">η = P_out / P_in</p>
+            <p id="cardHeatLoss" class="mt-2 text-[10px] text-slate-500">1,600 MW lost as heat</p>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p class="text-[10px] font-bold tracking-wide text-slate-500">CO₂ &amp; HOMES POWERED</p>
+            <p id="cardHomes" class="mt-2 text-xl font-bold text-purple-600">320,000</p>
+            <p class="text-xs font-semibold text-slate-600">Households</p>
+            <p id="cardCo2" class="mt-2 text-[10px] font-semibold text-slate-600">CO₂: 0 tonnes/hr</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ENERGY TRANSFORMATION CHAIN -->
+      <section class="rounded-xl border border-slate-200 bg-white p-4">
+        <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-3">
+          <h2 class="text-lg font-bold">🔄 Energy Transformation Chain</h2>
+          <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            Conservation of Energy
+          </span>
+        </div>
+
+        <div id="transformationSteps" class="space-y-2.5 text-xs">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div id="prosConsBox" class="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-700">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- TAB 2: RENEWABLE VS. NON-RENEWABLE CITY GRID BALANCER                 -->
+  <!-- ===================================================================== -->
+  <div id="tabGrid" class="hidden">
+    <main class="grid grid-cols-1 gap-4 p-4 lg:grid-cols-3">
+      <!-- MIX SLIDERS -->
+      <section class="rounded-xl border border-slate-200 bg-white p-4">
+        <h2 class="mb-3 border-b border-slate-100 pb-3 text-lg font-bold">
+          🎛 Configure City Energy Mix
+        </h2>
+        <p class="mb-4 text-xs text-slate-500">
+          Balance renewable and non-renewable sources to meet the city's <strong>1,000 MW</strong> demand while minimizing CO₂ and resource depletion.
+        </p>
+
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between text-xs font-bold">
+              <span class="text-emerald-700">☀️ Solar Farms (Renewable)</span>
+              <span id="mixValSolar">250 MW</span>
+            </div>
+            <input id="mixSolar" type="range" min="0" max="600" step="50" value="250" class="w-full" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold">
+              <span class="text-emerald-700">🌬️ Wind Turbines (Renewable)</span>
+              <span id="mixValWind">200 MW</span>
+            </div>
+            <input id="mixWind" type="range" min="0" max="600" step="50" value="200" class="w-full" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold">
+              <span class="text-emerald-700">💧 Hydroelectric Dam (Renewable)</span>
+              <span id="mixValHydro">150 MW</span>
+            </div>
+            <input id="mixHydro" type="range" min="0" max="500" step="50" value="150" class="w-full" />
+          </div>
+
+          <div class="border-t border-slate-100 pt-3">
+            <div class="flex justify-between text-xs font-bold">
+              <span class="text-amber-700">🏭 Coal Thermal (Non-Renewable)</span>
+              <span id="mixValCoal">300 MW</span>
+            </div>
+            <input id="mixCoal" type="range" min="0" max="800" step="50" value="300" class="w-full" />
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs font-bold">
+              <span class="text-purple-700">☢️ Nuclear Reactor (Non-Renewable)</span>
+              <span id="mixValNuclear">100 MW</span>
+            </div>
+            <input id="mixNuclear" type="range" min="0" max="600" step="50" value="100" class="w-full" />
+          </div>
+        </div>
+      </section>
+
+      <!-- GRID ANALYTICS -->
+      <section class="rounded-xl border border-slate-200 bg-white p-4">
+        <h2 class="mb-4 border-b border-slate-100 pb-3 text-lg font-bold">
+          📊 Grid Sustainability Scorecard
+        </h2>
+
+        <!-- Supply vs Demand Bar -->
+        <div class="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <div class="mb-1 flex justify-between text-xs font-bold">
+            <span>Total Supply vs. City Demand (1,000 MW)</span>
+            <span id="gridTotalSupply" class="text-blue-700">1,000 MW</span>
+          </div>
+          <div class="h-3 w-full overflow-hidden rounded-full bg-slate-200">
+            <div id="gridSupplyBar" class="h-full bg-emerald-600 transition-all" style="width: 100%"></div>
+          </div>
+          <p id="gridStatusText" class="mt-1.5 text-xs font-semibold text-emerald-700">
+            ✓ Grid Balanced — Frequency stable at 50 Hz
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p class="text-[10px] font-bold text-slate-500">RENEWABLE SHARE</p>
+            <p id="gridRenewPct" class="mt-1 text-2xl font-bold text-emerald-600">60%</p>
+            <p class="text-[10px] text-slate-500">Inexhaustible sources</p>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p class="text-[10px] font-bold text-slate-500">NON-RENEWABLE SHARE</p>
+            <p id="gridNonRenewPct" class="mt-1 text-2xl font-bold text-amber-600">40%</p>
+            <p class="text-[10px] text-slate-500">Finite fossil / nuclear</p>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p class="text-[10px] font-bold text-slate-500">GRID CO₂ RATE</p>
+            <p id="gridCo2Rate" class="mt-1 text-2xl font-bold text-red-600">246 t/hr</p>
+            <p class="text-[10px] text-slate-500">Carbon footprint</p>
+          </div>
+
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p class="text-[10px] font-bold text-slate-500">EST. FUEL RESERVE</p>
+            <p id="gridFuelYears" class="mt-1 text-2xl font-bold text-blue-600">115 yrs</p>
+            <p class="text-[10px] text-slate-500">At current burn rate</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- NCERT COMPARISON TABLE -->
+      <section class="rounded-xl border border-slate-200 bg-white p-4">
+        <h2 class="mb-3 border-b border-slate-100 pb-3 text-lg font-bold">
+          📚 Renewable vs. Non-Renewable
+        </h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse text-left text-xs">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50 text-slate-700">
+                <th class="p-2 font-bold">Feature</th>
+                <th class="p-2 font-bold text-emerald-700">Renewable</th>
+                <th class="p-2 font-bold text-amber-700">Non-Renewable</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="p-2 font-semibold">Availability</td>
+                <td class="p-2">Inexhaustible; replenished naturally</td>
+                <td class="p-2">Finite reserves; takes millions of years to form</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold">Examples</td>
+                <td class="p-2">Solar, Wind, Hydro, Biomass, Geothermal</td>
+                <td class="p-2">Coal, Petroleum, Natural Gas, Uranium</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold">Pollution</td>
+                <td class="p-2">Clean; near-zero greenhouse gases</td>
+                <td class="p-2">High CO₂, SO₂ emissions (or radioactive waste)</td>
+              </tr>
+              <tr>
+                <td class="p-2 font-semibold">Reliability</td>
+                <td class="p-2">Weather / site dependent (intermittent)</td>
+                <td class="p-2">High energy density; 24×7 dispatchable baseload</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs text-slate-500">
+    Sources of Energy Virtual Lab | Renewable &amp; Non-Renewable Power Generation | Energy Conservation
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- JAVASCRIPT SIMULATION ENGINE                                          -->
+  <!-- ===================================================================== -->
+  <script>
+    const SOURCE_DATA = {
+      solar: {
+        name: "Solar Photovoltaic (PV) Power Plant — Renewable",
+        subtitle: "Direct conversion of sunlight into DC electricity, converted to grid AC via Inverter",
+        isRenewable: true,
+        inputLabel: "Solar Irradiance (Sunlight)",
+        inputCardTitle: "RAW SOLAR INPUT",
+        inputCardSub: "Sunlight hitting PV array",
+        efficiency: 0.20,
+        co2PerMWh: 0,
+        inverterTitle: "DC → AC INVERTER",
+        inverterSub: "50 Hz Grid Sync",
+        chain: [
+          { step: "1. Solar Radiation Input", desc: "Photons carry electromagnetic energy from the Sun (~1000 W/m² peak)." },
+          { step: "2. Photovoltaic Effect (DC)", desc: "Silicon PV solar cells absorb photons and generate Direct Current (DC)." },
+          { step: "3. Power Inverter & Grid (AC)", desc: "DC wires feed the Inverter to convert DC into Alternating Current (AC) for homes." }
+        ],
+        prosCons: "<strong>Pros:</strong> Infinite energy, zero emissions, low maintenance.<br><strong>Limitations:</strong> Zero output at night, ~20% panel efficiency, weather-dependent."
+      },
+      wind: {
+        name: "Wind Turbine Farm — Renewable",
+        subtitle: "Kinetic energy of moving air rotates blades coupled to an alternator and inverter",
+        isRenewable: true,
+        inputLabel: "Wind Speed Intensity",
+        inputCardTitle: "RAW WIND INPUT",
+        inputCardSub: "Kinetic energy of air",
+        efficiency: 0.35,
+        co2PerMWh: 0,
+        inverterTitle: "INVERTER / CONVERTER",
+        inverterSub: "AC-DC-AC Stabilizer",
+        chain: [
+          { step: "1. Kinetic Energy of Wind", desc: "Moving air masses strike aerodynamic rotor blades." },
+          { step: "2. Mechanical → Generator", desc: "Rotor shaft spins the nacelle alternator to generate variable-frequency power." },
+          { step: "3. Power Inverter & Grid", desc: "Cables carry power down the tower to the Inverter for 50 Hz grid synchronization." }
+        ],
+        prosCons: "<strong>Pros:</strong> Zero fuel cost, zero pollution, land beneath can still be farmed.<br><strong>Limitations:</strong> Requires minimum wind speed (~15 km/h), intermittent output."
+      },
+      hydro: {
+        name: "Hydroelectric Dam Power Plant — Renewable",
+        subtitle: "Gravitational potential energy of stored water drives turbines wired to grid inverter/transformer",
+        isRenewable: true,
+        inputLabel: "Water Flow / Penstock Gate",
+        inputCardTitle: "RAW HYDRO INPUT",
+        inputCardSub: "Potential energy (mgh/t)",
+        efficiency: 0.85,
+        co2PerMWh: 0,
+        inverterTitle: "INVERTER & STEP-UP",
+        inverterSub: "Grid Power Conditioning",
+        chain: [
+          { step: "1. Gravitational Potential Energy", desc: "Water stored at height behind a dam holds potential energy (mgh)." },
+          { step: "2. Penstock & Water Turbine", desc: "High-speed water spins turbine runners connected to a generator." },
+          { step: "3. Inverter / Transformer & Grid", desc: "Heavy copper busbars connect generator output to the grid conditioning unit." }
+        ],
+        prosCons: "<strong>Pros:</strong> Highest efficiency (~85%), fast startup, replenishes via water cycle.<br><strong>Limitations:</strong> Large dams submerge ecosystems and displace local communities."
+      },
+      coal: {
+        name: "Coal-Fired Thermal Power Plant — Non-Renewable",
+        subtitle: "Chemical energy of fossil coal produces steam to drive a turbine & grid conditioning station",
+        isRenewable: false,
+        inputLabel: "Coal Feed & Boiler Burn Rate",
+        inputCardTitle: "RAW THERMAL INPUT",
+        inputCardSub: "Chemical heat of coal",
+        efficiency: 0.38,
+        co2PerMWh: 0.82,
+        inverterTitle: "GRID SYNC & INVERTER",
+        inverterSub: "Auxiliary & HV Step-Up",
+        chain: [
+          { step: "1. Chemical Energy (Coal)", desc: "Pulverized coal burns in a boiler furnace, releasing thermal energy." },
+          { step: "2. Steam Turbine & Alternator", desc: "Superheated steam spins a turbine coupled to an electrical alternator." },
+          { step: "3. Power Conditioning & Grid", desc: "Generated electricity is routed via power cables to grid synchronization & transmission." }
+        ],
+        prosCons: "<strong>Pros:</strong> Reliable 24×7 baseload power, established infrastructure.<br><strong>Limitations:</strong> Finite fossil fuel, ~62% heat waste, major source of CO₂ and acid rain."
+      },
+      nuclear: {
+        name: "Nuclear Fission Power Plant — Non-Renewable",
+        subtitle: "Controlled fission of Uranium-235 nuclei releases immense heat (E = Δmc²)",
+        isRenewable: false,
+        inputLabel: "Control Rod Withdrawal (Reactor Power)",
+        inputCardTitle: "RAW NUCLEAR HEAT",
+        inputCardSub: "Fission thermal power",
+        efficiency: 0.33,
+        co2PerMWh: 0,
+        inverterTitle: "GRID SYNC & INVERTER",
+        inverterSub: "HV Grid Conditioning",
+        chain: [
+          { step: "1. Nuclear Fission (E = Δmc²)", desc: "Slow neutrons split U-235 atoms, releasing huge thermal energy." },
+          { step: "2. Heat Exchanger & Steam Turbine", desc: "Coolant boils water into steam to drive the turbine alternator." },
+          { step: "3. Power Conditioning & Grid", desc: "Output wires feed the inverter/transformer station before entering transmission lines." }
+        ],
+        prosCons: "<strong>Pros:</strong> Enormous energy density (1 kg U-235 ≈ 2,500 tonnes coal), zero CO₂.<br><strong>Limitations:</strong> Finite Uranium ore, hazardous radioactive waste disposal, high safety cost."
+      }
+    };
+
+    let currentSource = "solar";
+    let inputPct = 80;
+    let capacityMW = 500;
+    let animTick = 0;
+
+    const canvas = document.getElementById("plantCanvas");
+    const ctx = canvas.getContext("2d");
+
+    document.getElementById("sliderInputParam").addEventListener("input", (e) => {
+      inputPct = parseInt(e.target.value, 10);
+      updatePlantUI();
+    });
+
+    document.getElementById("sliderCapacity").addEventListener("input", (e) => {
+      capacityMW = parseInt(e.target.value, 10);
+      updatePlantUI();
+    });
+
+    function switchTab(tab) {
+      const tabPlant = document.getElementById("tabPlant");
+      const tabGrid = document.getElementById("tabGrid");
+      const btnPlant = document.getElementById("btnTabPlant");
+      const btnGrid = document.getElementById("btnTabGrid");
+
+      if (tab === "plant") {
+        tabPlant.classList.remove("hidden");
+        tabGrid.classList.add("hidden");
+        btnPlant.className = "rounded-md bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition";
+        btnGrid.className = "rounded-md px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition";
+      } else {
+        tabPlant.classList.add("hidden");
+        tabGrid.classList.remove("hidden");
+        btnGrid.className = "rounded-md bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition";
+        btnPlant.className = "rounded-md px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition";
+        updateGridUI();
+      }
+    }
+
+    function selectSource(src) {
+      currentSource = src;
+      document.querySelectorAll(".source-pill").forEach((btn) => {
+        btn.className = "source-pill rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50";
+      });
+      const activeBtn = document.getElementById(`pill-${src}`);
+      const isRen = SOURCE_DATA[src].isRenewable;
+      activeBtn.className = `source-pill rounded-lg ${isRen ? "bg-emerald-600" : "bg-amber-600"} px-3 py-1.5 text-xs font-bold text-white shadow-sm`;
+
+      updatePlantUI();
+    }
+
+    function updatePlantUI() {
+      const data = SOURCE_DATA[currentSource];
+      const powerOut = Math.round(capacityMW * (inputPct / 100));
+      const powerIn = Math.round(powerOut / data.efficiency);
+      const heatLoss = powerIn - powerOut;
+      const co2 = Math.round(powerOut * data.co2PerMWh);
+      const homes = Math.round((powerOut * 1000) / 1.25);
+
+      document.getElementById("plantTitle").textContent = data.name;
+      document.getElementById("plantTitle").className = data.isRenewable
+        ? "font-bold text-emerald-700"
+        : "font-bold text-amber-700";
+      document.getElementById("plantSubtitle").textContent = data.subtitle;
+      document.getElementById("lblInputParam").textContent = data.inputLabel;
+
+      if (currentSource === "solar") {
+        document.getElementById("valInputParam").textContent = `${inputPct}% (${inputPct * 10} W/m²)`;
+      } else {
+        document.getElementById("valInputParam").textContent = `${inputPct}%`;
+      }
+      document.getElementById("valCapacity").textContent = `${capacityMW} MW`;
+
+      document.getElementById("cardInputTitle").textContent = data.inputCardTitle;
+      document.getElementById("cardPowerIn").textContent = powerIn.toLocaleString();
+      document.getElementById("cardInputSub").textContent = data.inputCardSub;
+
+      document.getElementById("cardPowerOut").textContent = powerOut.toLocaleString();
+      document.getElementById("cardEfficiency").textContent = `${Math.round(data.efficiency * 100)}%`;
+      document.getElementById("cardHeatLoss").textContent = `${heatLoss.toLocaleString()} MW lost as heat`;
+      document.getElementById("cardHomes").textContent = homes.toLocaleString();
+      document.getElementById("cardCo2").textContent = `CO₂: ${co2} tonnes/hr`;
+
+      const classBox = document.getElementById("classificationBox");
+      if (data.isRenewable) {
+        classBox.className = "rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs leading-5 text-emerald-900";
+        classBox.innerHTML = "<strong>Category: Renewable Source</strong><br />Replenished naturally in a short time scale. Sustainable with zero direct carbon emissions.";
+      } else {
+        classBox.className = "rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900";
+        classBox.innerHTML = "<strong>Category: Non-Renewable Source</strong><br />Extracted from finite underground geological deposits that cannot be replenished in human lifetimes.";
+      }
+
+      document.getElementById("transformationSteps").innerHTML = data.chain
+        .map(
+          (item) => `
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-2.5">
+            <p class="font-bold text-slate-800">${item.step}</p>
+            <p class="mt-0.5 text-slate-600">${item.desc}</p>
+          </div>
+        `
+        )
+        .join("");
+
+      document.getElementById("prosConsBox").innerHTML = data.prosCons;
+    }
+
+    // =========================================================================
+    // HELPER: DRAW WIRE WITH ANIMATED CURRENT PULSES
+    // =========================================================================
+    function drawAnimatedWire(points, color, pulseColor, rate, isDashed = false) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 4;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      if (isDashed) ctx.setLineDash([8, 6]);
+
+      ctx.beginPath();
+      points.forEach((pt, i) => {
+        if (i === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Moving current dots along segments
+      if (rate > 0.02) {
+        ctx.fillStyle = pulseColor;
+        for (let seg = 0; seg < points.length - 1; seg++) {
+          const p1 = points[seg];
+          const p2 = points[seg + 1];
+          const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+          const count = Math.max(1, Math.floor(dist / 55));
+          for (let k = 0; k < count; k++) {
+            const t = ((animTick * 0.45 + k / count) % 1);
+            const px = p1.x + (p2.x - p1.x) * t;
+            const py = p1.y + (p2.y - p1.y) * t;
+            ctx.beginPath();
+            ctx.arc(px, py, 4.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+      ctx.restore();
+    }
+
+    // =========================================================================
+    // CANVAS SCHEMATIC ANIMATION FOR EACH POWER PLANT
+    // =========================================================================
+    function renderPlantCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const rate = inputPct / 100;
+      const data = SOURCE_DATA[currentSource];
+      const powerOut = Math.round(capacityMW * rate);
+      const powerIn = Math.round(powerOut / data.efficiency);
+
+      animTick += 0.04 * (0.2 + rate * 1.5);
+
+      // Ground strip
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillRect(0, 325, 1100, 65);
+
+      // Draw Shared Inverter Station + Transmission Pylon + City Grid
+      const inverterX = 530;
+      const inverterY = 215;
+      const inverterW = 126;
+      const inverterH = 74;
+
+      drawInverterAndGrid(inverterX, inverterY, inverterW, inverterH, rate, powerOut, data);
+
+      // Draw Specific Energy Source & Its Connecting Wires to the Inverter
+      if (currentSource === "solar") drawSolarPlant(rate, powerIn, powerOut, inverterX, inverterY);
+      else if (currentSource === "wind") drawWindPlant(rate, powerIn, powerOut, inverterX, inverterY);
+      else if (currentSource === "hydro") drawHydroPlant(rate, powerIn, powerOut, inverterX, inverterY);
+      else if (currentSource === "coal") drawCoalPlant(rate, powerIn, powerOut, inverterX, inverterY);
+      else if (currentSource === "nuclear") drawNuclearPlant(rate, powerIn, powerOut, inverterX, inverterY);
+    }
+
+    function drawInverterAndGrid(invX, invY, invW, invH, rate, powerOut, data) {
+      // 1. INVERTER / POWER CONDITIONING UNIT (Present in all simulations)
+      ctx.fillStyle = "#0f172a";
+      ctx.strokeStyle = "#334155";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.roundRect(invX, invY, invW, invH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Status LED on Inverter
+      ctx.fillStyle = rate > 0.02 ? "#10b981" : "#ef4444";
+      ctx.beginPath();
+      ctx.arc(invX + 14, invY + 15, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 11px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(data.inverterTitle, invX + invW / 2, invY + 34);
+
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "10px sans-serif";
+      ctx.fillText(data.inverterSub, invX + invW / 2, invY + 49);
+
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 11px monospace";
+      ctx.fillText(`OUT: ${powerOut} MW AC`, invX + invW / 2, invY + 65);
+
+      // 2. Transmission Pylon
+      ctx.strokeStyle = "#475569";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(765, 325);
+      ctx.lineTo(785, 160);
+      ctx.lineTo(805, 325);
+      ctx.moveTo(760, 195);
+      ctx.lineTo(810, 195);
+      ctx.moveTo(767, 235);
+      ctx.lineTo(803, 235);
+      ctx.stroke();
+
+      // 3. AC Output Wires from Inverter -> Pylon -> City Grid
+      drawAnimatedWire(
+        [
+          { x: invX + invW, y: invY + 36 },
+          { x: 760, y: 195 },
+          { x: 925, y: 215 }
+        ],
+        "#2563eb",
+        "#60a5fa",
+        rate
+      );
+
+      // 4. City Buildings
+      const buildings = [
+        { x: 920, y: 210, w: 45, h: 115 },
+        { x: 975, y: 180, w: 50, h: 145 },
+        { x: 1035, y: 230, w: 45, h: 95 },
+      ];
+      buildings.forEach((b) => {
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        ctx.fillStyle = rate > 0.05 ? `rgba(250, 204, 21, ${0.25 + rate * 0.75})` : "#1e293b";
+        for (let wy = b.y + 12; wy < b.y + b.h - 15; wy += 22) {
+          ctx.fillRect(b.x + 8, wy, 10, 12);
+          ctx.fillRect(b.x + b.w - 18, wy, 10, 12);
+        }
+      });
+
+      ctx.fillStyle = "#1e293b";
+      ctx.font = "bold 12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(`City Grid (${powerOut} MW)`, 1000, 350);
+    }
+
+    // =========================================================================
+    // 1. REALISTIC SOLAR PV ARRAY + INCOMING SUN POWER BADGE + DC WIRES
+    // =========================================================================
+    function drawSolarPlant(rate, powerIn, powerOut, invX, invY) {
+      // Sun Sphere with Glow
+      const sunX = 115;
+      const sunY = 78;
+      const sunAlpha = 0.25 + rate * 0.75;
+
+      const grad = ctx.createRadialGradient(sunX, sunY, 12, sunX, sunY, 58);
+      grad.addColorStop(0, `rgba(251, 191, 36, ${sunAlpha})`);
+      grad.addColorStop(1, "rgba(251, 191, 36, 0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, 58, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = `rgba(245, 158, 11, ${sunAlpha})`;
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, 34, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Incoming Solar Power Callout Box next to Sun
+      ctx.fillStyle = "#fffbeb";
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(165, 32, 225, 52, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#b45309";
+      ctx.font = "bold 11px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`☀️ INCOMING SUN POWER: ${powerIn.toLocaleString()} MW`, 175, 52);
+      ctx.fillStyle = "#78350f";
+      ctx.font = "11px sans-serif";
+      ctx.fillText(`Irradiance: ${inputPct * 10} W/m² | Panel η: 20%`, 175, 71);
+
+      // Animated Sunbeams striking Solar Panels
+      if (rate > 0.02) {
+        ctx.strokeStyle = `rgba(245, 158, 11, ${sunAlpha * 0.75})`;
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([12, 10]);
+        ctx.lineDashOffset = -animTick * 22;
+        for (let i = 0; i < 5; i++) {
+          ctx.beginPath();
+          ctx.moveTo(145 + i * 14, 105 - i * 4);
+          ctx.lineTo(240 + i * 44, 195);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
+
+      // Draw Two Realistic Monocrystalline Silicon Solar Panels (PV Modules)
+      drawSolarPanelModule(255, 225, -0.34, rate);
+      drawSolarPanelModule(385, 225, -0.34, rate);
+
+      // DC Junction Box under Panels
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(305, 290, 42, 22);
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "bold 9px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("DC BOX", 326, 304);
+
+      // DC Wires from Solar Panels -> DC Junction Box -> Inverter
+      // Positive (+ Red) & Negative (- Black/Slate) DC Cables
+      drawAnimatedWire(
+        [
+          { x: 255, y: 252 },
+          { x: 255, y: 298 },
+          { x: 305, y: 298 }
+        ],
+        "#dc2626",
+        "#fca5a5",
+        rate
+      );
+      drawAnimatedWire(
+        [
+          { x: 385, y: 252 },
+          { x: 385, y: 298 },
+          { x: 347, y: 298 }
+        ],
+        "#dc2626",
+        "#fca5a5",
+        rate
+      );
+
+      // Main DC Trunk Cable from DC Junction Box to Inverter Input
+      drawAnimatedWire(
+        [
+          { x: 347, y: 302 },
+          { x: 465, y: 302 },
+          { x: 465, y: invY + 38 },
+          { x: invX, y: invY + 38 }
+        ],
+        "#dc2626",
+        "#fbbf24",
+        rate
+      );
+
+      ctx.fillStyle = "#b91c1c";
+      ctx.font = "bold 10px monospace";
+      ctx.fillText(`DC Cable (${powerOut} MW DC)`, 425, 317);
+    }
+
+    function drawSolarPanelModule(cx, cy, tiltRad, rate) {
+      // Steel Mounting Post & Truss
+      ctx.fillStyle = "#64748b";
+      ctx.fillRect(cx - 6, cy + 12, 12, 88);
+      ctx.fillStyle = "#475569";
+      ctx.fillRect(cx - 22, cy + 95, 44, 6);
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(tiltRad);
+
+      const pw = 116;
+      const ph = 68;
+
+      // Silver Anodized Aluminum Outer Frame
+      ctx.fillStyle = "#cbd5e1";
+      ctx.strokeStyle = "#475569";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(-pw / 2 - 4, -ph / 2 - 4, pw + 8, ph + 8, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // Deep Monocrystalline Silicon Backing
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(-pw / 2, -ph / 2, pw, ph);
+
+      // Individual Solar Cells Grid (6 cols x 4 rows)
+      const cols = 6;
+      const rows = 4;
+      const cellW = (pw - (cols + 1) * 2) / cols;
+      const cellH = (ph - (rows + 1) * 2) / rows;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = -pw / 2 + 2 + c * (cellW + 2);
+          const y = -ph / 2 + 2 + r * (cellH + 2);
+
+          // Photovoltaic blue shimmer when sunlight hits
+          ctx.fillStyle = rate > 0.05 ? "#1d4ed8" : "#1e3a8a";
+          ctx.fillRect(x, y, cellW, cellH);
+
+          // Silver metallic busbar finger line inside cell
+          ctx.strokeStyle = "rgba(148, 163, 184, 0.55)";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(x + cellW / 2, y);
+          ctx.lineTo(x + cellW / 2, y + cellH);
+          ctx.stroke();
+        }
+      }
+
+      // Glass Reflection Sheen
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.06 + rate * 0.14})`;
+      ctx.beginPath();
+      ctx.moveTo(-pw / 2, -ph / 2);
+      ctx.lineTo(pw * 0.25, -ph / 2);
+      ctx.lineTo(-pw * 0.15, ph / 2);
+      ctx.lineTo(-pw / 2, ph / 2);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // =========================================================================
+    // 2. WIND TURBINE + WIRES TO INVERTER
+    // =========================================================================
+    function drawWindPlant(rate, powerIn, powerOut, invX, invY) {
+      drawInputBadge(`🌬️ INCOMING WIND POWER: ${powerIn.toLocaleString()} MW`, `Turbine Efficiency: 35%`);
+
+      if (rate > 0.05) {
+        ctx.strokeStyle = "#94a3b8";
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 4; i++) {
+          const wx = ((animTick * 90 + i * 160) % 340) + 40;
+          const wy = 110 + i * 42;
+          ctx.beginPath();
+          ctx.moveTo(wx, wy);
+          ctx.lineTo(wx + 65, wy);
+          ctx.stroke();
+        }
+      }
+
+      // Tower
+      ctx.fillStyle = "#cbd5e1";
+      ctx.beginPath();
+      ctx.moveTo(315, 325);
+      ctx.lineTo(327, 145);
+      ctx.lineTo(339, 325);
+      ctx.closePath();
+      ctx.fill();
+
+      // Nacelle (Generator Housing)
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(315, 134, 34, 16);
+
+      // Spinning Blades
+      ctx.save();
+      ctx.translate(327, 142);
+      ctx.rotate(animTick * 1.4);
+      ctx.fillStyle = "#2563eb";
+      for (let b = 0; b < 3; b++) {
+        ctx.rotate((Math.PI * 2) / 3);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-7, -88);
+        ctx.lineTo(5, -88);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // Power Cable running down tower to Inverter
+      drawAnimatedWire(
+        [
+          { x: 332, y: 150 },
+          { x: 332, y: 295 },
+          { x: 470, y: 295 },
+          { x: 470, y: invY + 38 },
+          { x: invX, y: invY + 38 }
+        ],
+        "#059669",
+        "#6ee7b7",
+        rate
+      );
+      ctx.fillStyle = "#047857";
+      ctx.font = "bold 10px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("Generator Power Cable", 405, 312);
+    }
+
+    // =========================================================================
+    // 3. HYDROELECTRIC DAM + WIRES TO INVERTER
+    // =========================================================================
+    function drawHydroPlant(rate, powerIn, powerOut, invX, invY) {
+      drawInputBadge(`💧 RAW HYDRO POWER: ${powerIn.toLocaleString()} MW`, `Turbine Efficiency: 85%`);
+
+      // Reservoir Water
+      ctx.fillStyle = "#38bdf8";
+      ctx.fillRect(40, 125, 190, 200);
+
+      // Dam Wall
+      ctx.fillStyle = "#64748b";
+      ctx.beginPath();
+      ctx.moveTo(220, 110);
+      ctx.lineTo(275, 110);
+      ctx.lineTo(320, 325);
+      ctx.lineTo(220, 325);
+      ctx.closePath();
+      ctx.fill();
+
+      // Penstock Water Pipe
+      if (rate > 0.05) {
+        ctx.strokeStyle = "#0284c7";
+        ctx.lineWidth = 13;
+        ctx.beginPath();
+        ctx.moveTo(230, 190);
+        ctx.lineTo(395, 275);
+        ctx.stroke();
+      }
+
+      // Turbine & Generator Housing
+      ctx.fillStyle = "#1e3a8a";
+      ctx.fillRect(380, 240, 56, 52);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("GEN", 408, 270);
+
+      // Wires from Hydro Generator to Inverter
+      drawAnimatedWire(
+        [
+          { x: 436, y: 266 },
+          { x: 480, y: 266 },
+          { x: 480, y: invY + 38 },
+          { x: invX, y: invY + 38 }
+        ],
+        "#2563eb",
+        "#93c5fd",
+        rate
+      );
+      ctx.fillStyle = "#1d4ed8";
+      ctx.font = "bold 10px monospace";
+      ctx.fillText("Busbar Cable", 475, 285);
+    }
+
+    // =========================================================================
+    // 4. COAL THERMAL PLANT + WIRES TO INVERTER
+    // =========================================================================
+    function drawCoalPlant(rate, powerIn, powerOut, invX, invY) {
+      drawInputBadge(`🔥 COAL THERMAL INPUT: ${powerIn.toLocaleString()} MW`, `Thermal Efficiency: 38%`);
+
+      // Boiler Building
+      ctx.fillStyle = "#475569";
+      ctx.fillRect(140, 155, 145, 170);
+
+      // Smokestack
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(235, 85, 28, 70);
+
+      if (rate > 0.05) {
+        ctx.fillStyle = `rgba(100, 116, 139, ${0.25 + rate * 0.5})`;
+        for (let i = 0; i < 4; i++) {
+          const sy = 75 - ((animTick * 25 + i * 25) % 55);
+          const sx = 249 + i * 16;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 12 + i * 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Coal Fire Glow
+      ctx.fillStyle = rate > 0.05 ? "#ea580c" : "#1e293b";
+      ctx.fillRect(160, 255, 105, 48);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("COAL BOILER", 212, 283);
+
+      // Steam Pipe to Alternator
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(285, 200);
+      ctx.lineTo(375, 245);
+      ctx.stroke();
+
+      // Steam Alternator Box
+      ctx.fillStyle = "#d97706";
+      ctx.fillRect(370, 225, 68, 52);
+      ctx.fillStyle = "#fff";
+      ctx.fillText("ALTERNATOR", 404, 255);
+
+      // Wires from Alternator to Inverter / Grid Conditioner
+      drawAnimatedWire(
+        [
+          { x: 438, y: 252 },
+          { x: invX, y: invY + 38 }
+        ],
+        "#d97706",
+        "#fde047",
+        rate
+      );
+      ctx.fillStyle = "#b45309";
+      ctx.font = "bold 10px monospace";
+      ctx.fillText("Output Wires", 484, 242);
+    }
+
+    // =========================================================================
+    // 5. NUCLEAR FISSION PLANT + WIRES TO INVERTER
+    // =========================================================================
+    function drawNuclearPlant(rate, powerIn, powerOut, invX, invY) {
+      drawInputBadge(`☢️ NUCLEAR THERMAL INPUT: ${powerIn.toLocaleString()} MW`, `Thermal Efficiency: 33%`);
+
+      // Containment Dome
+      ctx.fillStyle = "#cbd5e1";
+      ctx.beginPath();
+      ctx.arc(210, 205, 72, Math.PI, 0);
+      ctx.lineTo(282, 325);
+      ctx.lineTo(138, 325);
+      ctx.closePath();
+      ctx.fill();
+
+      // Reactor Core
+      ctx.fillStyle = rate > 0.05 ? "#9333ea" : "#475569";
+      ctx.fillRect(178, 230, 64, 72);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("U-235 CORE", 210, 270);
+
+      // Steam Turbine Alternator
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(282, 235);
+      ctx.lineTo(370, 250);
+      ctx.stroke();
+
+      ctx.fillStyle = "#7c3aed";
+      ctx.fillRect(370, 225, 68, 52);
+      ctx.fillStyle = "#fff";
+      ctx.fillText("ALTERNATOR", 404, 255);
+
+      // Wires from Alternator to Inverter / Grid Conditioner
+      drawAnimatedWire(
+        [
+          { x: 438, y: 252 },
+          { x: invX, y: invY + 38 }
+        ],
+        "#7c3aed",
+        "#e9d5ff",
+        rate
+      );
+      ctx.fillStyle = "#6d28d9";
+      ctx.font = "bold 10px monospace";
+      ctx.fillText("Output Wires", 484, 242);
+    }
+
+    function drawInputBadge(line1, line2) {
+      ctx.fillStyle = "#f8fafc";
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(45, 25, 250, 50, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#1e293b";
+      ctx.font = "bold 11px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(line1, 56, 45);
+      ctx.fillStyle = "#64748b";
+      ctx.font = "11px sans-serif";
+      ctx.fillText(line2, 56, 63);
+    }
+
+    // =========================================================================
+    // TAB 2: CITY GRID ENERGY MIX CALCULATIONS
+    // =========================================================================
+    const mixInputs = ["mixSolar", "mixWind", "mixHydro", "mixCoal", "mixNuclear"];
+    mixInputs.forEach((id) => {
+      document.getElementById(id).addEventListener("input", updateGridUI);
+    });
+
+    function updateGridUI() {
+      const s = parseInt(document.getElementById("mixSolar").value, 10);
+      const w = parseInt(document.getElementById("mixWind").value, 10);
+      const h = parseInt(document.getElementById("mixHydro").value, 10);
+      const c = parseInt(document.getElementById("mixCoal").value, 10);
+      const n = parseInt(document.getElementById("mixNuclear").value, 10);
+
+      document.getElementById("mixValSolar").textContent = `${s} MW`;
+      document.getElementById("mixValWind").textContent = `${w} MW`;
+      document.getElementById("mixValHydro").textContent = `${h} MW`;
+      document.getElementById("mixValCoal").textContent = `${c} MW`;
+      document.getElementById("mixValNuclear").textContent = `${n} MW`;
+
+      const total = s + w + h + c + n;
+      const renew = s + w + h;
+      const nonRenew = c + n;
+
+      const renewPct = total > 0 ? Math.round((renew / total) * 100) : 0;
+      const nonRenewPct = total > 0 ? 100 - renewPct : 0;
+      const co2 = Math.round(c * 0.82);
+      const fuelYears = nonRenew === 0 ? "∞" : `${Math.round(46000 / nonRenew)} yrs`;
+
+      document.getElementById("gridTotalSupply").textContent = `${total.toLocaleString()} MW`;
+      document.getElementById("gridRenewPct").textContent = `${renewPct}%`;
+      document.getElementById("gridNonRenewPct").textContent = `${nonRenewPct}%`;
+      document.getElementById("gridCo2Rate").textContent = `${co2} t/hr`;
+      document.getElementById("gridFuelYears").textContent = fuelYears;
+
+      const bar = document.getElementById("gridSupplyBar");
+      const status = document.getElementById("gridStatusText");
+      bar.style.width = `${Math.min(100, (total / 1000) * 100)}%`;
+
+      if (total < 1000) {
+        bar.className = "h-full bg-amber-500 transition-all";
+        status.className = "mt-1.5 text-xs font-semibold text-amber-700";
+        status.textContent = `⚠ Power Deficit (${1000 - total} MW short) — Rolling blackouts occurring`;
+      } else if (total > 1000) {
+        bar.className = "h-full bg-blue-600 transition-all";
+        status.className = "mt-1.5 text-xs font-semibold text-blue-700";
+        status.textContent = `⚡ Surplus Generation (+${total - 1000} MW) — Excess stored or exported`;
+      } else {
+        bar.className = "h-full bg-emerald-600 transition-all";
+        status.className = "mt-1.5 text-xs font-semibold text-emerald-700";
+        status.textContent = "✓ Grid Balanced — Frequency stable at 50 Hz";
+      }
+    }
+
+    function resetLab() {
+      inputPct = 80;
+      capacityMW = 500;
+      document.getElementById("sliderInputParam").value = 80;
+      document.getElementById("sliderCapacity").value = 500;
+      selectSource("solar");
+
+      document.getElementById("mixSolar").value = 250;
+      document.getElementById("mixWind").value = 200;
+      document.getElementById("mixHydro").value = 150;
+      document.getElementById("mixCoal").value = 300;
+      document.getElementById("mixNuclear").value = 100;
+      updateGridUI();
+    }
+
+    function loop() {
+      renderPlantCanvas();
+      requestAnimationFrame(loop);
+    }
+
+    selectSource("solar");
+    updateGridUI();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
